@@ -11,12 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import Banco.UsuarioDao;
-import Model.Carrinho;
 import Model.Endereco;
 import Model.Livro;
 import Model.Usuario;
 
-@WebServlet({ "/ControleUsuario", "/cadastrar.html", "/buscar.html", "/Produtos", "/Autenticar", "/Carrinho", "/Deslogar", "/index.html", "/produtos.html", "/login.html", "/cadastro.html", "/Gravar", "/Apagar"})
+@WebServlet({ "/ControleUsuario", "/cadastrar.html", "/buscar.html", "/Produtos", "/Autenticar", "/Deslogar", "/index.html", "/produtos.html", "/login.html", "/cadastro.html"})
 public class ControleUsuario extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
@@ -48,9 +47,6 @@ public class ControleUsuario extends HttpServlet {
 			}else if(url.equalsIgnoreCase("/buscar.html")){
 				buscar(request,response);
 			
-			}else if(url.equalsIgnoreCase("/Carrinho")){
-				logar(request,response);
-			
 			}else if(url.equalsIgnoreCase("/Autenticar")){
 				autenticar(request,response);
 			
@@ -68,12 +64,6 @@ public class ControleUsuario extends HttpServlet {
 			
 			}else if(url.equalsIgnoreCase("/cadastro.html")){
 				request.getRequestDispatcher("cadastro.jsp").forward(request, response);
-				
-			}else if(url.equalsIgnoreCase("/Gravar")){
-				gravaCarrinho(request,response);
-				
-			}else if(url.equalsIgnoreCase("/Apagar")){
-				removerCarrinho(request,response);
 				
 			}else{
 				response.sendRedirect("/");
@@ -166,18 +156,6 @@ public class ControleUsuario extends HttpServlet {
 		}
 	}
 	
-	protected void logar(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		HttpSession session = request.getSession();
-		int id = Integer.parseInt(request.getParameter("livro"));
-		
-		if(session.getAttribute("logou") != null){
-			response.sendRedirect("carrinho.html?livro=" + id);
-		}else{
-			request.setAttribute("msg", "Usuario não logado!");
-			response.sendRedirect("login.jsp");
-		}
-	}
-	
 	protected void deslogar(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		HttpSession session = request.getSession();
 		
@@ -206,54 +184,6 @@ public class ControleUsuario extends HttpServlet {
 			e.printStackTrace();
 		}
 		
-	}
-	
-	protected void gravaCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		HttpSession session = request.getSession();
-		Carrinho carrinho = new Carrinho();
-		UsuarioDao ud = new UsuarioDao();
-		Livro livro = new Livro();
-		carrinho = (Carrinho)session.getAttribute("carrinho");
-		int it = carrinho.qntdLivros(carrinho.getLivros());
-		for (int i = 0; i < it ; i++){
-			String id = Integer.toString(carrinho.getLivros().get(i).getId());
-			livro = carrinho.getLivros().get(i);
-			livro.setQntd(Integer.parseInt(request.getParameter("qtd"+id)));
-			carrinho.updateItemCarrinho(livro);
-		}
-		
-		
-		try {
-			if(ud.carrinho(carrinho)){
-				response.sendRedirect("Email2");
-			}else{
-				request.setAttribute("msg", "Falha ao relizar a compra");
-				response.sendRedirect("index.html");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-	}
-	
-	protected void removerCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		HttpSession session = request.getSession();
-		int id = Integer.parseInt(request.getParameter("remover"));
-		UsuarioDao ud = new UsuarioDao();
-		Carrinho carrinho = new Carrinho();
-		Livro livro = new Livro();
-		try {
-			livro = ud.comprarLivro(id);
-			carrinho = (Carrinho)session.getAttribute("carrinho");
-			int index = (carrinho.getLivros().indexOf(livro)) * -1;
-			carrinho.removeItemCarrinho(index);
-			session.setAttribute("carrinho", carrinho);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}finally{
-			request.setAttribute("msg", "<div class='alert alert-dismissible alert-success'><button type='button' class='close' data-dismiss='alert'>&times;</button><strong>Livro removido com sucesso!</strong></div>");
-			response.sendRedirect("carrinho.html");
-		}
 	}
 	
 }
